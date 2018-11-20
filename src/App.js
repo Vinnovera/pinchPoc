@@ -36,8 +36,28 @@ class App extends Component {
     const inboundScale = event.scale
     const scale = this.state.scale * this.getAdjustedScaleFactor(inboundScale)
     this.setState({scale}, () => {
-      this.setScale()
+      this.setScaleOnImg()
     })
+  }
+
+  handlePan = (event) => {
+    const {deltaX, deltaY} = event
+    const marginX = this.getMargin('TOP', deltaX)
+    const marginY = this.getMargin('LEFT', deltaY)
+    this.setState({marginX, marginY}, this.setMarginOnImage)
+  }
+
+  getMargin = (type, delta) => {
+    const margin = type === 'TOP' ? this.state.marginX : this.state.marginY
+    return margin + delta
+  }
+
+  setMarginOnImage = () => {
+    const {marginX: marginTop, marginY: marginLeft} = this.state
+
+    this.imgRef.current.style['margin-top'] = `${marginTop}px`
+    this.imgRef.current.style['margin-left']= `${marginLeft}px`
+
   }
 
   getAdjustedScaleFactor = inboundScale => {
@@ -53,7 +73,7 @@ class App extends Component {
     }
   }
 
-  setScale = () => {
+  setScaleOnImg = () => {
     const scale = this.state.scale
     const w = this.state.width * scale
     const h = this.state.height * scale
@@ -62,7 +82,7 @@ class App extends Component {
   }
 
   imageLoaded = ({target: img}) => {
-    const {offsetWidth:wrapperOffsetWidth , offsetHeight: wrapperOffsetHeight} = this.wrapperRef.current
+    const {offsetWidth: wrapperOffsetWidth, offsetHeight: wrapperOffsetHeight} = this.wrapperRef.current
     const {offsetHeight, offsetWidth} = img
     const aspectRatio = offsetWidth / offsetHeight
     this.setState({aspectRatio, wrapperOffsetWidth, wrapperOffsetHeight, offsetHeight, offsetWidth}, this.fitWindow)
@@ -70,7 +90,7 @@ class App extends Component {
 
   fitWindow = () => {
     const img = this.imgRef.current
-    const {aspectRatio, wrapperOffsetWidth, wrapperOffsetHeight, offsetHeight, offsetWidth} = this.state
+    const {aspectRatio, wrapperOffsetWidth, wrapperOffsetHeight} = this.state
     const width = Math.min(wrapperOffsetWidth, (wrapperOffsetHeight / aspectRatio))
     const height = Math.min(wrapperOffsetHeight, (wrapperOffsetWidth / aspectRatio))
     this.setState({width, height})
@@ -90,8 +110,9 @@ class App extends Component {
             <Hammer
               onTap={this.handleTap}
               onPinch={this.handlePinch}
+              onPan={this.handlePan}
               options={hammerOptions}>
-              <div className="refsWrappre">
+              <div>
                 <img src="/test.jpg" alt="" ref={this.imgRef} onLoad={this.imageLoaded} className="pinch-img"/>
               </div>
             </Hammer>
